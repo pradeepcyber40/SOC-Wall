@@ -58,7 +58,23 @@ export function useWebSocket({ onEvent, onKpiUpdate, soundEnabled = true }: UseW
 
     const connect = () => {
       if (unmounted) return;
-      const wsUrl = 'ws://localhost:8000/ws/soc-feed';
+      const getWsUrl = () => {
+        const envWs = (import.meta as any).env?.VITE_WS_URL;
+        if (envWs) return envWs;
+        const envApi = (import.meta as any).env?.VITE_API_URL;
+        if (envApi) {
+          const u = new URL(envApi);
+          const proto = u.protocol === 'https:' ? 'wss:' : 'ws:';
+          return `${proto}//${u.host}/ws/soc-feed`;
+        }
+        if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+          const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+          return `${proto}//${window.location.host}/ws/soc-feed`;
+        }
+        return 'ws://127.0.0.1:8000/ws/soc-feed';
+      };
+
+      const wsUrl = getWsUrl();
       const ws = new WebSocket(wsUrl);
       socketRef.current = ws;
 

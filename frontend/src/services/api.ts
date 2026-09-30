@@ -10,12 +10,25 @@ import {
   UserItem
 } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+// Dynamic API resolution for production and development
+const getApiBaseUrl = () => {
+  const envUrl = (import.meta as any).env?.VITE_API_URL;
+  if (envUrl) {
+    return `${envUrl.replace(/\/$/, '')}/api/v1`;
+  }
+  // If hosted in production, use relative /api/v1 (or same origin)
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return '/api/v1';
+  }
+  return 'http://127.0.0.1:8000/api/v1';
+};
 
-// Token storage in memory with fallback
+const API_BASE_URL = getApiBaseUrl();
+
+// Token storage in memory
 let authToken: string | null = null;
 let currentRole: string = 'Super Admin';
-let currentUserFullName: string = 'Alexander Vance (Chief CISO)';
+let currentUserFullName: string = 'Security Administrator';
 
 export const getAuthToken = () => authToken;
 export const setAuthToken = (token: string | null, role?: string, name?: string) => {
