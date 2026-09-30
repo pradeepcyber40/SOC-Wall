@@ -212,6 +212,18 @@ export const createUser = async (userData: any) => {
   return res.json();
 };
 
+export const deleteUser = async (userId: number) => {
+  const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: getHeaders()
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({ detail: 'Failed to delete user' }));
+    throw new Error(errorData.detail || 'Failed to delete user');
+  }
+  return res.json();
+};
+
 export const fetchSystemConfig = async () => {
   const res = await fetch(`${API_BASE_URL}/admin/config`, {
     headers: getHeaders()

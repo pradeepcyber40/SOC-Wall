@@ -50,6 +50,32 @@ def create_user(
 
     return new_user
 
+@router.delete("/users/{user_id}")
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["Super Admin"]))
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete current active session user")
+
+    username = user.username
+    db.delete(user)
+    db.commit()
+
+    log_audit_event(
+        db,
+        user=current_user.username,
+        action="Admin deleted user",
+        resource=username,
+        details=f"Deleted user ID {user_id}"
+    )
+
+    return {"message": f"User {username} deleted successfully"}
+
 @router.get("/config")
 def get_system_config(
     db: Session = Depends(get_db),
